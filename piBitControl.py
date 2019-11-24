@@ -1,5 +1,6 @@
 import time
 from bluezero import microbit
+from keyboardRead import NonBlockingConsole
 
 devices={}
 filepath = './microbits.cnf'
@@ -41,21 +42,28 @@ if (devices is None or len(devices)==0):
     print ("Connection to all devices failed - exiting")
     exit()
 
-looping = True
-while looping:
+with NonBlockingConsole() as nbc:
+    looping = True
+    while looping:
 
-    # Check each device in turn
-    for key in devices:
+        # Check each device in turn
+        for key in devices:
+            
+            # If the escape key is pressed on the PI then break
+            if nbc.get_data() == '\x1b':  # x1b is ESC
+                print ("Raspberry Pi Escape key pressed")
+                looping=False
+
+            # If the A button is pressed - exit the loop (a kill switch)
+            if (devices[key].button_a > 0):
+                print("Device [", key, "] Button A Pressed" )
+                looping=False
+            
+            # Print the temperature from the device 
+            print('Temperature [', key, '] = ', devices[key].temperature)
         
-        # If the A button is pressed - exit the loop (a kill switch)
-        if (devices[key].button_a > 0):
-            print("Device [", key, "] Button A Pressed" )
-            looping=False
-        
-        # Print the temperature from the device 
-        print('Temperature [', key, '] = ', devices[key].temperature)
-    
-    time.sleep(1)
+        time.sleep(1)
+
 
 # Tidy up by disconnecting from all devices
 print ("Disconnecting from all devices")
