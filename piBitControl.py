@@ -14,6 +14,7 @@ try:
             key=line.strip()
             print ("..Device: [",key.strip(),"]")
             try:
+                # Define microbit object
                 print ("....Initialising")
                 devices[key] = microbit.Microbit(adapter_addr='B8:27:EB:66:CC:EF',
                                     device_addr=key,
@@ -25,10 +26,12 @@ try:
                                     temperature_service=True)
                 print ("....Initialised")
 
-                print ("....Conneting")
+                # Connect to microbit
+                print ("....Connecting")
                 devices[key].connect()
                 print ("....Connected")
             except:
+                # If initilisation or connection failed remove this device from device list
                 print ("....Initialisation or Connection failed")
                 devices.pop(key, None)
 
@@ -39,36 +42,43 @@ except:
 
 # Check that at least one device is connected to - if not exit
 if (devices is None or len(devices)==0):
-    print ("Connection to all devices failed - exiting")
+    print ("No connected devices - exiting")
     exit()
 
+# Loop whilst listening for keyboard input (on the Pi)
 with NonBlockingConsole() as nbc:
     looping = True
     while looping:
 
-        # Check each device in turn
-        for key in devices:
+        # Check each device in turn - getting the unique key of each device
+        for dKey in devices:
             
             # If the escape key is pressed on the PI then break
-            if nbc.get_data() == '\x1b':  # x1b is ESC
+            keyboardVal = nbc.get_data()
+            if keyboardVal == '\x1b':  # x1b is ESC
                 print ("Raspberry Pi Escape key pressed")
                 looping=False
+            elif keyboardVal == 'm':  
+                msg = input("Enter message to output to all Pis:")
+                for d in devices:
+                    devices[d].text=msg
+
 
             # If the A button is pressed - exit the loop (a kill switch)
-            if (devices[key].button_a > 0):
-                print("Device [", key, "] Button A Pressed" )
+            if (devices[dKey].button_a > 0):
+                print("Device [", dKey, "] Button A Pressed" )
                 looping=False
             
             # Print the temperature from the device 
-            print('Temperature [', key, '] = ', devices[key].temperature)
+            print('Temperature [', dKey, '] = ', devices[dKey].temperature)
         
         time.sleep(1)
 
 
 # Tidy up by disconnecting from all devices
 print ("Disconnecting from all devices")
-for key in devices:
-    print ("..Device [",key,"]")
+for dKey in devices:
+    print ("..Device [",dKey,"]")
     print ("....Disconnecting")
     devices[key].disconnect()
     print ("....Disconnected")
