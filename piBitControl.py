@@ -2,6 +2,9 @@ import time
 from bluezero import microbit
 from keyboardRead import NonBlockingConsole
 
+# Set the address of the Pi Bluetooth controler
+adapter='B8:27:EB:66:CC:EF'
+
 devices={}
 filepath = './microbits.cnf'
 print ("Initialising microbits found in ", filepath)
@@ -16,7 +19,7 @@ try:
             try:
                 # Define microbit object
                 print ("....Initialising")
-                devices[key] = microbit.Microbit(adapter_addr='B8:27:EB:66:CC:EF',
+                devices[key] = microbit.Microbit(adapter_addr=adapter,
                                     device_addr=key,
                                     accelerometer_service=True,
                                     button_service=True,
